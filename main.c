@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include "vm.h"
+
 static char *readFile(const char *path) {
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
@@ -33,7 +35,16 @@ static void runFile(const char *path) {
 }
 
 static void repl() {
+    char line[1024];
+    for (;;) {
+        printf("> ");
 
+        if (!fgets(line, sizeof(line), stdin)) {
+            printf("\n");
+            break;
+        }
+        interpret(line);
+    }
 }
 
 int main(int argc, const char *argv[]) {
