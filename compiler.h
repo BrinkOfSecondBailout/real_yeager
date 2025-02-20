@@ -13,4 +13,6 @@ typedef struct {
     Value constants[];
 } Compiler;
 
+void compile(char *source);
+
 #endif

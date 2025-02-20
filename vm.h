@@ -2,6 +2,7 @@
 #define vm_h
 
 #include "common.h"
+#include "compiler.h"
 #include "value.h"
 
 #define FRAMES_MAX 64
@@ -17,5 +18,7 @@ typedef struct {
     Value stack[STACK_MAX];
     Value *stackTop;
 } VM;
+
+InterpretResult interpret(char *source);
 
 #endif

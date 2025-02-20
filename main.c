@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "common.h"
 #include "vm.h"
 
@@ -7,6 +5,7 @@ static char *readFile(const char *path) {
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
         fprintf(stderr, "Could not open file \"%s\".\n", path);
+        return NULL;
     }
     fseek(file, 0L, SEEK_END);
     size_t fileSize = ftell(file);
@@ -19,7 +18,8 @@ static char *readFile(const char *path) {
     size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
     if (bytesRead < fileSize) {
         fprintf(stderr, "Could not read file \"%s\".\n", path);
-        exit(74);
+        fclose(file);
+        return NULL;
     }
     buffer[bytesRead] = '\0';
     fclose(file);
@@ -28,6 +28,7 @@ static char *readFile(const char *path) {
 
 static void runFile(const char *path) {
     char *source = readFile(path);
+    if (source == NULL) return;
     InterpretResult result = interpret(source);
     free(source);
 
@@ -49,6 +50,7 @@ static void repl() {
 }
 
 int main(int argc, const char *argv[]) {
+    printf("Hi");
     if (argc == 1) {
         repl();
     } else if (argc == 2) {
