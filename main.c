@@ -50,7 +50,6 @@ static void repl() {
 }
 
 int main(int argc, const char *argv[]) {
-    printf("Hi");
     if (argc == 1) {
         repl();
     } else if (argc == 2) {
