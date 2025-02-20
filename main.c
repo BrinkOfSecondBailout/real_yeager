@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "common.h"
 #include "vm.h"
 
 static char *readFile(const char *path) {
