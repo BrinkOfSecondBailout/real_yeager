@@ -1,8 +1,10 @@
 #include "compiler.h"
 #include "scanner.h"
 
-static void initCompiler(Compiler *compiler, FunctionType type) {
 
+static void initCompiler(Compiler *compiler, FunctionType type) {
+    
+    
 }
 
 void compile(char *source) {
