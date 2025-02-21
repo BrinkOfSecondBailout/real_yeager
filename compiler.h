@@ -2,6 +2,7 @@
 #define compiler_h
 
 #include "common.h"
+#include "scanner.h"
 #include "value.h"
 
 typedef enum {
@@ -22,7 +23,7 @@ typedef struct {
 
 typedef struct {
     struct Compiler *enclosing;
-    ObjFunction function;
+    ObjFunction *function;
     FunctionType type;
 
     Local locals[UINT8_COUNT];

@@ -1,5 +1,8 @@
 #include "common.h"
 #include "object.h"
+#include "table.h"
+#include "memory.h"
+#include "vm.h"
 
 static Obj *allocateObject(size_t size, ObjType type) {
     Obj *object = (Obj*) reallocate(NULL, 0, size);
@@ -10,6 +13,9 @@ static Obj *allocateObject(size_t size, ObjType type) {
 #define ALLOCATE_OBJ(type, objectType) \
     (type*)allocateObject(sizeof(type), objectType)
 
+#define ALLOCATE(type, count) \
+    (type *)reallocate(NULL, 0, sizeof(type) * count)
+
 ObjFunction *newFunction() {
     ObjFunction *function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
     function->arity = 0;
@@ -17,4 +23,39 @@ ObjFunction *newFunction() {
     function->name = NULL;
     function->upvalueCount = 0;
     return function;
+}
+
+static uint32_t hashString(const char *key, int length) {
+    uint32_t hash = 2166136261u;
+    for (int i = 0; i < length; i++) {
+        hash ^= (uint8_t)key[i];
+        hash *= 16777619;
+    }
+    return hash;
+}
+
+static ObjString *allocateString(const char *chars, int length, uint32_t hash) {
+    ObjString *newStringObj = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+    newStringObj->length = length;
+    newStringObj->hash = hash;
+    newStringObj->chars = chars;
+
+    push(OBJ_VAL(newStringObj));
+    tableSet(&vm.strings, newStringObj, NIL_VAL);
+    pop();
+    return newStringObj;
+}
+
+
+ObjString *copyString(const char *chars, int length) {
+    uint32_t hash = hashString(chars, length);
+
+    ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
+    if (interned != NULL) return interned;
+
+    char *heapChars = ALLOCATE(char, length + 1);
+    memcpy(heapChars, chars, length);
+    heapChars[length] = '\0';
+
+    return allocateString(heapChars, length, hash);
 }
