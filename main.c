@@ -50,6 +50,8 @@ static void repl() {
 }
 
 int main(int argc, const char *argv[]) {
+    initVm();
+
     if (argc == 1) {
         repl();
     } else if (argc == 2) {

@@ -40,6 +40,6 @@ typedef struct {
     bool panicMode;
 } Parser;
 
-void compile(char *source);
+ObjFunction *compile(char *source);
 
 #endif

@@ -19,6 +19,19 @@ ObjFunction *newFunction() {
     return function;
 }
 
+ObjClosure *newClosure(ObjFunction *function) {
+    ObjUpvalue **upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
+    for (int i = 0; i < function->upvalueCount; i++) {
+        upvalues[i] = NULL;
+    }
+
+    ObjClosure *closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+    closure->function = function;
+    closure->upvalueCount = function->upvalueCount;
+    closure->upvalues = upvalues;
+    return closure;
+}
+
 static uint32_t hashString(const char *key, int length) {
     uint32_t hash = 2166136261u;
     for (int i = 0; i < length; i++) {

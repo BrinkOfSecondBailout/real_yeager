@@ -74,12 +74,17 @@ static ObjFunction *endCompiler() {
     return function;
 }
 
-void compile(char *source) {
+ObjFunction *compile(char *source) {
     initScanner(source);
     Compiler compiler;
     initCompiler(&compiler, TYPE_SCRIPT);
-    for (;;) {
-
+    parser.hadError = false;
+    parser.panicMode = false;
+    advance();
+    while (!match(TOKEN_EOF)) {
+        declaration();
     }
+    ObjFunction *function = endCompiler();
+    return parser.hadError ? NULL : function;
 
 }
