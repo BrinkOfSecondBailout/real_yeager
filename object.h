@@ -27,6 +27,11 @@ typedef struct {
     ObjType type;
 } Obj;
 
+#define ALLOCATE_OBJ(type, objectType) \
+  (type *)allocateObject(sizeof(type), objectType)
+
+#define ALLOCATE(type, count) (type *)reallocate(NULL, 0, sizeof(type) * count)
+
 ObjFunction *newFunction();
 
 #endif

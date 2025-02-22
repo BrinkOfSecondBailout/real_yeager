@@ -4,6 +4,12 @@
 Compiler *current = NULL;
 Parser parser;
 
+
+
+static void emitReturn() {
+
+}
+
 static void initCompiler(Compiler *compiler, FunctionType type) {
     compiler->enclosing = current;
     compiler->function = NULL;
@@ -27,7 +33,13 @@ static void initCompiler(Compiler *compiler, FunctionType type) {
         local->name.start = "";
         local->name.length = 0;
     }
+}
 
+static ObjFunction *endCompiler() {
+    emitReturn();
+    ObjFunction *function = current->function;
+    current = current->enclosing;
+    return function;
 }
 
 void compile(char *source) {

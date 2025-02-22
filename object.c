@@ -10,12 +10,6 @@ static Obj *allocateObject(size_t size, ObjType type) {
     return object;
 }
 
-#define ALLOCATE_OBJ(type, objectType) \
-    (type*)allocateObject(sizeof(type), objectType)
-
-#define ALLOCATE(type, count) \
-    (type *)reallocate(NULL, 0, sizeof(type) * count)
-
 ObjFunction *newFunction() {
     ObjFunction *function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
     function->arity = 0;
