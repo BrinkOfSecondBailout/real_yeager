@@ -4,8 +4,26 @@
 
 #define TABLE_MAX_LOAD 0.75
 
-bool tableDelete(Table *table, ObjString *key) {
+void initTable(Table *table) {
+    table->capacity = 0;
+    table->count = 0;
+    table->entries = NULL;
+}
 
+void freeTable(Table *table) {
+    FREE_ARRAY(Entry, table->entries, table->capacity);
+    initTable(table);
+}
+
+bool tableDelete(Table *table, ObjString *key) {
+    if (table->count == 0) return false;
+    Entry *entry = findEntry(table->entries, table->capacity, key);
+    if (entry->key == NULL) return false;
+    
+    // Turn the entry to a tombstone
+    entry->key = NULL;
+    entry->value = BOOL_VAL(true);
+    return true;
 }
 
 static Entry *findEntry(Entry *entries, int capacity, ObjString *key) {
@@ -60,7 +78,12 @@ static void adjustCapacity(Table *table, int capacity) {
 }
 
 void tableAddAll(Table *from, Table *to) {
-    
+    for (int i = 0; i < from->capacity; i++) {
+        Entry *entry = &from->entries[i];
+        if (entry->key != NULL) {
+            tableSet(to, entry->key, entry->value);
+        }
+    }
 }
 
 bool tableSet(Table *table, ObjString *key, Value value) {

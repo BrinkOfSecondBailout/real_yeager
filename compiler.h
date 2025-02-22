@@ -7,7 +7,8 @@
 
 typedef enum {
     TYPE_SCRIPT,
-    TYPE_FUNCTION
+    TYPE_FUNCTION,
+    TYPE_INITIALIZER
 } FunctionType;
 
 typedef struct {

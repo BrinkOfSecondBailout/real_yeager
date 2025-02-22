@@ -33,5 +33,7 @@ typedef struct {
 #define ALLOCATE(type, count) (type *)reallocate(NULL, 0, sizeof(type) * count)
 
 ObjFunction *newFunction();
+ObjString *copyString(const char *chars, int length);
+
 
 #endif

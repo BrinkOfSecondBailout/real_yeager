@@ -39,5 +39,7 @@ typedef struct {
 #define IS_NUMBER(value)        ((value).type == VAL_NUMBER)
 #define IS_NIL(value)           ((value).type == VAL_NIL)
 
+void initValueArray(ValueArray *array);
+void writeValueArray(ValueArray *array, Value value);
 
 #endif
