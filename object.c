@@ -66,3 +66,31 @@ ObjString *copyString(const char *chars, int length) {
 
     return allocateString(heapChars, length, hash);
 }
+
+ObjString *takeString(char *chars, int length) {
+    uint32_t hash = hashString(chars, length);
+    ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
+    if (interned != NULL) {
+        FREE_ARRAY(char, chars, length + 1);
+        return interned;
+    }
+
+    return allocateString(chars, length, hash);
+}
+
+void printObject(Value value) {
+    switch(OBJ_TYPE(value)) {
+        case OBJ_CLOSURE:
+            printFunction(AS_CLOSURE(value)->function);
+            break;
+        case OBJ_FUNCTION:
+            printFunction(AS_FUNCTION(value));
+            break;
+        case OBJ_STRING:
+            print("%s", AS_CSTRING(value));
+            break;
+        case OBJ_UPVALUE:
+            printf("upvalue");
+            break;
+    }
+}

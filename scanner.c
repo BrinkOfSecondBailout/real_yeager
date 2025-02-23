@@ -155,7 +155,7 @@ static Token string() {
     return makeToken(TOKEN_STRING);
 }
 
-Token scanToken(char *source) {
+Token scanToken() {
     skipWhiteSpace();
     scanner.start = scanner.current;
     if (isAtEnd) return makeToken(TOKEN_EOF);

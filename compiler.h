@@ -22,7 +22,7 @@ typedef struct {
     bool isLocal;
 } Upvalue;
 
-typedef struct {
+typedef struct Compiler {
     struct Compiler *enclosing;
     ObjFunction *function;
     FunctionType type;

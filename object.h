@@ -3,12 +3,26 @@
 
 #include "chunk.h"
 
+// Take an Obj and check what type of Object it is
+#define OBJ_TYPE(value)             ((AS_OBJ(value)->type))
+
+// Retrieve the ObjType* from a value's obj* , basically unpacking a runtime object value to get to a raw value and then retrieve the ObjType* value
+#define AS_STRING(value)            ((ObjString*)AS_OBJ(value))
+#define AS_CLOSURE(value)           ((ObjClosure*)AS_OBJ(value))
+#define AS_FUNCTION(value)          ((ObjFunction*)AS_OBJ(value))
+#define AS_CSTRING(value)           (((ObjString*)AS_OBJ(value))->chars)
+
+
 typedef enum {
     OBJ_STRING,
     OBJ_FUNCTION,
     OBJ_CLOSURE,
     OBJ_UPVALUE,
 } ObjType;
+
+struct Obj {
+    ObjType type;
+};
 
 typedef struct {
     Obj obj;
@@ -39,10 +53,6 @@ struct ObjString {
     uint32_t hash;
 };
 
-typedef struct {
-    ObjType type;
-} Obj;
-
 #define ALLOCATE_OBJ(type, objectType) \
   (type *)allocateObject(sizeof(type), objectType)
 
@@ -51,6 +61,7 @@ typedef struct {
 ObjFunction *newFunction();
 ObjClosure *newClosure(ObjFunction *function);
 ObjString *copyString(const char *chars, int length);
-
+ObjString *takeString(char *chars, int length);
+void printObject(Value value);
 
 #endif
