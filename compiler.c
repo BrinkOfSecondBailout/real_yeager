@@ -475,18 +475,130 @@ static void classDeclaration() {
 
 }
 
-static void funDeclaration() {
+static void function(FunctionType type) {
+    // Set up new compiler context
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    beginScope();
 
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            // Parse function parameters
+            current->function->arity++;
+            if (current->function->arity > 255) {
+                errorAtCurrent("Can't have more than 255 parameters.");
+            }
+            uint8_t constant = parseVariable("Expect parameter name.");
+            defineVariable(constant);
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    consume(TOKEN_LEFT_BRACE, "Expect '{' after function body.");
+    // Parse body, which is a block of statements
+    block();
+
+    ObjFunction *function = endCompiler();
+    // Tell the VM to wrap this function in a closure at runtime
+    emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
+
+    // Upvalue emission
+    for (int i = 0; i < function->upvalueCount; i++) {
+        // Emits upvalue metadata
+        emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
+        emitByte(compiler.upvalues[i].index);
+    }
+}
+
+static void funDeclaration() {
+    uint8_t global = parseVariable("Expect variable name.");
+    // Functions are allowed to be called on before it's defined, as long as it's declared, this is how recursions work
+    markInitialized();
+    function(TYPE_FUNCTION);
+    defineVariable(global);
+}
+
+static uint8_t makeConstant(Value value) {
+    int constant = addConstant(currentChunk(), value);
+    if (constant > UINT8_MAX) {
+        error("Too many constants in one chunk.");
+        return 0;
+    }
+    return (uint8_t)constant;
+}
+
+static uint8_t identifierConstant(Token *name) {
+    // Only for global variables
+    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+
+static void addLocal(Token name) {
+    if (current->localCount == UINT8_COUNT) {
+        errorAtPrevious("Too many local variables in function.");
+        return;
+    }
+    Local *local = &current->locals[current->localCount++];
+    local->name = name;
+    local->depth = -1;
+    local->isCaptured = false;
+}
+
+static void declareVariable() {
+    // Skip global scope
+    if (current->scopeDepth == 0) return;
+
+    Token *name = &parser.previous;
+    // Loop backwards through all the locals, checking newest first
+    for (int i = current->localCount - 1; i >= 0; i--) {
+        Local *local = &current->locals[i];
+        // If local is fully active/defined AND if its in an outer scope, exit the loop entirely, that means we are breaching on outer scope's locals, this technique allows shadowing
+        if (local->depth != -1 && local->depth < current->scopeDepth) {
+            break;
+        }
+
+        if (identifiersEqual(name, &local->name)) {
+            errorAtPrevious("Already a variable with this name in scope.");
+        }
+    }
+    addLocal(*name);
 }
 
 static uint8_t parseVariable(const char *message) {
     consume(TOKEN_IDENTIFIER, message);
 
-    
+    // This only affects local variables
+    declareVariable();
+    if (current->scopeDepth > 0) return 0;
+
+    // This only affects global variables
+    return identifierConstant(&parser.previous);
+}
+
+static void markInitialized() {
+    if (current->scopeDepth == 0) return;
+    current->locals[current->localCount - 1].depth = current->scopeDepth;
+}
+
+static void defineVariable(uint8_t global) {
+    // If local variable, initialize the variable
+    if (current->scopeDepth > 0) {
+        markInitialized();
+        return;
+    }
+    // For global, emit two bytes, global is where the name is stored in the chunk's Value array
+    emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
 static void varDeclaration() {
-    uint8_t global parseVariable("Expect variable name.");
+    uint8_t global = parseVariable("Expect variable name.");
+    if (match(TOKEN_EQUAL)) {
+        expression();
+    } else {
+        emitByte(OP_NIL);
+    }
+    consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+
+    defineVariable(global);
 }
 
 static void printStatement() {
@@ -500,7 +612,21 @@ static void forStatement() {
 }
 
 static void ifStatement() {
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
 
+    int thenJump = emitJump(OP_JUMP_IF_FALSE);
+    emitPop();
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before statement body.");
+    while (!check(TOKEN_RIGHT_BRACE)) {
+        statement();
+    }
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after statement body.");
+
+    int elseJump = emitJump(OP_JUMP);
+    
 }
 
 static void returnStatement() {
